@@ -8,18 +8,19 @@ from typing import Annotated
 
 from . import model
 from .database import SessionDep
+from .config import SECRET_KEY,ALGORITHM,EXP_TIME
 
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-secret_key="09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-algorithm="HS256"
-
+secret_key=SECRET_KEY
+algorithm=ALGORITHM
+exp_time = EXP_TIME
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(
-        minutes=int(60)
+        minutes=exp_time
     )
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=algorithm)
