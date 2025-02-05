@@ -4,6 +4,7 @@ from sqlmodel import select
 from .model import user, store, purchase, Token
 import math
 from .oauth import create_access_token
+from .logging_config import logger
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -35,6 +36,9 @@ def calculate_points(gallon: float|None, grocery:float|None)-> int:
     return int(point)
 
 def update_purchase_detail(update: bool, current_purchase: purchase,  current_user:user, current_store:store)->(purchase,user):   
+    previous_points = current_purchase.points_awarded
+    previous_shower = current_purchase.is_shower_awarded
+    previous_total = current_purchase.total
     if current_purchase.gallons >= 75 and update == False:
         current_purchase.is_shower_awarded = True
         current_user.showers = current_user.showers+1
@@ -69,6 +73,13 @@ def update_purchase_detail(update: bool, current_purchase: purchase,  current_us
         current_user.points = current_user.points + current_purchase.points_awarded-temp_point
         
     current_purchase.total = current_purchase.fuel_price * current_purchase.gallons + current_purchase.grocery
+
+    logger.info(
+        f"Purchase {current_purchase.purchase_id} updated by store {current_store.store_id}. "
+        f"Points: {previous_points} → {current_purchase.points_awarded}, "
+        f"Shower Awarded: {previous_shower} → {current_purchase.is_shower_awarded}, "
+        f"Total: {previous_total} → {current_purchase.total}"
+    )
     return (current_purchase, current_user)
 
 
